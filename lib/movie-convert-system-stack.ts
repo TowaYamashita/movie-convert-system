@@ -1,16 +1,25 @@
-import * as cdk from 'aws-cdk-lib';
+import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { Bucket } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { MediaConvetStack } from './media-convert-stack';
 
-export class MovieConvertSystemStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+export class MovieConvertSystemStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    // 変換元動画データアップロード先
+    const inputBucket = new Bucket(this, 'InputBucket', {
+      bucketName: 'input.example.com',
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'MovieConvertSystemQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // 変換後動画データアップロード先
+    const outputBucket = new Bucket(this, 'OutPutBucket', {
+      bucketName: 'output.example.com',
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    // AWS Elemetal MediaConvert
+    const queue = new MediaConvetStack(this, 'MediaConvert', {});
   }
 }
