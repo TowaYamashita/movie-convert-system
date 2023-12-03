@@ -1,10 +1,12 @@
-import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { MediaConvetStack } from './media-convert-stack';
 import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { Rule } from 'aws-cdk-lib/aws-events';
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 
 export class MovieConvertSystemStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -14,6 +16,14 @@ export class MovieConvertSystemStack extends Stack {
     const inputBucket = new Bucket(this, 'InputBucket', {
       bucketName: 'input.example.com',
       removalPolicy: RemovalPolicy.DESTROY,
+    });
+    inputBucket.addLifecycleRule({
+      id: 'DeleteObjectsWithTagDelay',
+      tagFilters: {
+        delay: 'true'
+      },
+      expiration: Duration.days(1),
+      noncurrentVersionExpiration: Duration.days(1),
     });
 
     // 変換後動画データアップロード先
@@ -62,5 +72,53 @@ export class MovieConvertSystemStack extends Stack {
       EventType.OBJECT_CREATED,
       new LambdaDestination(mediaConvertLambda)
     );
+
+     // 動画変換に成功した場合のフローを定義
+     const eventSuccessRule = new Rule(this, 'MediaConvertSuccessRule', {
+      eventPattern: {
+        source: ['aws.mediaconvert'],
+        detailType: ['MediaConvert Job State Change'],
+        detail: {
+          status: ['COMPLETE'],
+          queue: [queue.arn],
+        },
+      },
+    });
+    const notifySuccessLambda = new Function(this, 'NotifySuccessLambda', {
+      functionName: 'notify-success-job',
+      runtime: Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: Code.fromAsset('lambda/notify_success_job'),
+      environment: {
+        MEDIA_CONVERT_ENDPOINT: 'https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com',
+      },
+    });
+    notifySuccessLambda.addToRolePolicy(queue.getJobPolicy);
+    inputBucket.grantReadWrite(notifySuccessLambda);
+    eventSuccessRule.addTarget(new LambdaFunction(notifySuccessLambda));
+
+     // 動画変換に失敗した場合のフローを定義
+    const eventErrorRule = new Rule(this, 'MediaConvertErrorRule', {
+      eventPattern: {
+        source: ['aws.mediaconvert'],
+        detailType: ['MediaConvert Job State Change'],
+        detail: {
+          status: ['NEW_WARNING', 'ERROR'],
+          queue: [queue.arn],
+        },
+      },
+    });
+    const notifyErrorLambda = new Function(this, 'NotifyErrorLambda', {
+      functionName: 'notify-error-job',
+      runtime: Runtime.NODEJS_20_X,
+      handler: 'index.handler',
+      code: Code.fromAsset('lambda/notify_error_job'),
+      environment: {
+        MEDIA_CONVERT_ENDPOINT: 'https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com',
+      },
+    });
+    notifyErrorLambda.addToRolePolicy(queue.getJobPolicy);
+    inputBucket.grantReadWrite(notifyErrorLambda);
+    eventErrorRule.addTarget(new LambdaFunction(notifyErrorLambda));
   }
 }

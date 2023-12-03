@@ -15,6 +15,7 @@ export class MediaConvetStack extends Construct{
   public readonly queueName: string;
   public readonly queuId: string;
   public readonly createJobPolicy: PolicyStatement;
+  public readonly getJobPolicy: PolicyStatement;
   public readonly iamRoleArn: string;
   public readonly outputPresetArns: string[];
 
@@ -38,6 +39,14 @@ export class MediaConvetStack extends Construct{
       ],
       actions: [
         'mediaconvert:CreateJob',
+      ],
+    });
+    this.getJobPolicy = new PolicyStatement({
+      resources: [
+        '*',
+      ],
+      actions: [
+        'mediaconvert:GetJob',
       ],
     });
 
