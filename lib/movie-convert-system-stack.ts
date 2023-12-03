@@ -26,11 +26,10 @@ export class MovieConvertSystemStack extends Stack {
       noncurrentVersionExpiration: Duration.days(1),
     });
 
-    // 変換後動画データアップロード先
-    const outputBucket = new Bucket(this, 'OutPutBucket', {
-      bucketName: 'output.example.com',
-      removalPolicy: RemovalPolicy.DESTROY,
-    });
+    // 変換後動画データアップロード先(既存のバケットを利用)
+    const outputBucket = Bucket.fromBucketName(this, 'OutputBacket', 
+      this.node.tryGetContext('outputBacketName') ?? 'output.example.com'
+    );
 
     // AWS Elemetal MediaConvert
     const queue = new MediaConvetStack(this, 'MediaConvert', {
