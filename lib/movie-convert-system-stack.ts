@@ -8,13 +8,22 @@ import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 
+interface StageContext {
+  inputBucketName: string;
+  outputBucketName: string;
+  customerMediaConvertEndpoint: string;
+}
+
 export class MovieConvertSystemStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
+    const stage = this.node.tryGetContext('stage');
+    const context : StageContext = this.node.tryGetContext(stage);
+
     // 変換元動画データアップロード先
     const inputBucket = new Bucket(this, 'InputBucket', {
-      bucketName: 'input.example.com',
+      bucketName: context.inputBucketName,
       removalPolicy: RemovalPolicy.DESTROY,
     });
     inputBucket.addLifecycleRule({
@@ -28,7 +37,7 @@ export class MovieConvertSystemStack extends Stack {
 
     // 変換後動画データアップロード先(既存のバケットを利用)
     const outputBucket = Bucket.fromBucketName(this, 'OutputBacket', 
-      this.node.tryGetContext('outputBacketName') ?? 'output.example.com'
+      context.outputBucketName,
     );
 
     // AWS Elemetal MediaConvert
@@ -46,7 +55,7 @@ export class MovieConvertSystemStack extends Stack {
       handler: 'index.handler',
       code: Code.fromAsset('lambda/submit_job'),
       environment: {
-        MEDIA_CONVERT_ENDPOINT: 'https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com',
+        MEDIA_CONVERT_ENDPOINT: context.customerMediaConvertEndpoint,
         QUEUE_ARN: queue.arn,
         OUTPUT_BUCKET_ARN: outputBucket.s3UrlForObject(),
         IAM_ROLE_ARN: queue.iamRoleArn,
@@ -89,7 +98,7 @@ export class MovieConvertSystemStack extends Stack {
       handler: 'index.handler',
       code: Code.fromAsset('lambda/notify_success_job'),
       environment: {
-        MEDIA_CONVERT_ENDPOINT: 'https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com',
+        MEDIA_CONVERT_ENDPOINT: context.customerMediaConvertEndpoint,
       },
     });
     notifySuccessLambda.addToRolePolicy(queue.getJobPolicy);
@@ -113,7 +122,7 @@ export class MovieConvertSystemStack extends Stack {
       handler: 'index.handler',
       code: Code.fromAsset('lambda/notify_error_job'),
       environment: {
-        MEDIA_CONVERT_ENDPOINT: 'https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com',
+        MEDIA_CONVERT_ENDPOINT: context.customerMediaConvertEndpoint,
       },
     });
     notifyErrorLambda.addToRolePolicy(queue.getJobPolicy);

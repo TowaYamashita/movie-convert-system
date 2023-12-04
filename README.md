@@ -28,17 +28,24 @@ npm run cdk bootstrap
 ```
 
 - 下記コマンドを実行して、アプリケーションスタックをデプロイする
-> ※出力先バケットは AWS CDK では作成しないので、既存のS3バケット名を指定する
+  - 本番環境へデプロイする場合は、`cdk.json` の prd に適当な値を記入する必要がある
 
 ```shell
-npm run cdk deploy -- -c outputBacketName=<出力先バケット名>
-# npm run cdk deploy -- -c outputBacketName=output.example.com
+# 開発環境
+npm run cdk deploy -- -c stage=dev
+
+# 本番環境
+npm run cdk deploy -- -c stage=prd
 ```
 
 - 下記コマンドを実行して、アプリケーションスタックを削除する
 
 ```shell
-npm run cdk destroy
+# 開発環境
+npm run cdk destroy -- -c stage=dev
+
+# 本番環境
+npm run cdk destroy -- -c stage=prd
 ```
 
 > npm run cdk bootstrap 実行時に作成されたブートストラップスタックは AWS CloudFormation コンソールから手動で削除する

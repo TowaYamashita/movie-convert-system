@@ -60,6 +60,15 @@
     "@aws-cdk/aws-appsync:useArnForSourceApiAssociationIdentifier": true,
     "@aws-cdk/aws-rds:preventRenderingDeprecatedCredentials": true,
     "@aws-cdk/aws-codepipeline-actions:useNewDefaultBranchForCodeCommitSource": true,
-    "outputBacketName": "output.example.com"
+    "dev": {
+      "inputBucketName": "input.example.com",
+      "outputBucketName": "output.example.com",
+      "customerMediaConvertEndpoint": "https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com"
+    },
+    "prd": {
+      "inputBucketName": "",
+      "outputBucketName": "",
+      "customerMediaConvertEndpoint": ""
+    }
   }
 }
