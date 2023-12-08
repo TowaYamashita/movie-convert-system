@@ -1,3 +1,6 @@
+import { MediaConvertClient, GetJobCommand } from "@aws-sdk/client-mediaconvert"; 
+import { S3Client, GetObjectTaggingCommand, PutObjectTaggingCommand } from '@aws-sdk/client-s3';
+
 export async function handler(event){
   await updateInputS3ObjectTag(event);
 
