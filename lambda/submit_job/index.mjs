@@ -13,7 +13,7 @@ export async function handler(event) {
 
   // 出力ファイル先のパスを生成
   const inputFilePrefix = inputFileKey.split('/').slice(0, -1).join('/');
-  const outputFilePrefix = inputFilePrefix.replace('input/movie', 'output/movie');
+  const outputFilePrefix = inputFilePrefix.replace(process.env.INPUT_PREFIX, process.env.OUTPUT_PREFIX);
   const outputFilePath = `${process.env.MOVIE_CONVERT_BUCKET_ARN}/${outputFilePrefix}`;
 
   // MediaConvert ジョブで使用する出力テンプレートのARNの配列

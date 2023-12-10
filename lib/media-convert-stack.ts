@@ -7,6 +7,8 @@ interface MediaConvetProps {
   region: string;
   accountId: string;
   inputBucket: string;
+  inputPrefix: string;
+  outputPrefix: string;
 }
 
 export class MediaConvetStack extends Construct {
@@ -55,7 +57,7 @@ export class MediaConvetStack extends Construct {
     role.addToPolicy(
       new PolicyStatement({
         resources: [
-          `arn:aws:s3:::${props.inputBucket}/*`
+          `arn:aws:s3:::${props.inputBucket}/${props.inputPrefix}/*`
         ],
         actions: [
           "s3:List*",
@@ -66,7 +68,7 @@ export class MediaConvetStack extends Construct {
     role.addToPolicy(
       new PolicyStatement({
         resources: [
-          `arn:aws:s3:::${props.inputBucket}/*`
+          `arn:aws:s3:::${props.inputBucket}/${props.outputPrefix}/*`
         ],
         actions: [
           "s3:Put*",

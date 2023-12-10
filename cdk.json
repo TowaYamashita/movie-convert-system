@@ -63,12 +63,16 @@
     "dev": {
       "inputBucketName": "input.example.com",
       "outputBucketName": "output.example.com",
-      "customerMediaConvertEndpoint": "https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com"
+      "customerMediaConvertEndpoint": "https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com",
+      "inputPrefix": "input/movie",
+      "outputPrefix": "output/movie"
     },
     "prd": {
       "inputBucketName": "",
       "outputBucketName": "",
-      "customerMediaConvertEndpoint": ""
+      "customerMediaConvertEndpoint": "",
+      "inputPrefix": "",
+      "outputPrefix": ""
     }
   }
 }
