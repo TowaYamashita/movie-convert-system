@@ -24,7 +24,12 @@ aws-cli/2.13.32 Python/3.11.6 Darwin/23.1.0 exe/x86_64 prompt/off
 
 ```shell
 npm install
-npm run cdk bootstrap
+
+# 開発環境
+npm run cdk bootstrap -- -c stage=dev
+
+# 本番環境
+npm run cdk bootstrap -- -c stage=prd
 ```
 
 - 下記コマンドを実行して、アプリケーションスタックをデプロイする
