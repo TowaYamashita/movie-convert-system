@@ -9,35 +9,78 @@ export async function handler(event) {
   // S3イベントからファイル情報を取得
   const s3Info = event.Records[0].s3;
   const inputBucket = s3Info.bucket.name;
-  const inputFileKey = decodeURIComponent(s3Info.object.key.replace(/\+/g, " "));
+  const inputFileKey = s3Info.object.key;
+
+  // 出力ファイル先のパスを生成
+  const inputFilePrefix = inputFileKey.split('/').slice(0, -1).join('/');
+  const outputFilePrefix = inputFilePrefix.replace('input/movie', 'output/movie');
+  const outputFilePath = `${process.env.MOVIE_CONVERT_BUCKET_ARN}/${outputFilePrefix}`;
 
   // MediaConvert ジョブで使用する出力テンプレートのARNの配列
-  // 環境変数では文字列でしか渡せないためカンマ区切りにしているため扱いやすいようにする
-  const presetArnList = process.env.OUTPUT_PRESET_ARNS.split(',');
+  const presetArnList ={
+    '360p': process.env.OUTPUT_PRESET_360P_ARN,
+    '720p': process.env.OUTPUT_PRESET_720P_ARN,
+    '1080p': process.env.OUTPUT_PRESET_1080P_ARN,
+  };
 
   // MediaConvert ジョブの設定
   const params = {
     "Queue": `${process.env.QUEUE_ARN}`,
     "Role": `${process.env.IAM_ROLE_ARN}`,
     "Settings": {
+      "TimecodeConfig": {
+        "Source": "ZEROBASED"
+      },
       "OutputGroups": [
         {
-          "Name": "File Group",
-          "OutputGroupSettings": {
-            "Type": "FILE_GROUP_SETTINGS",
-            "FileGroupSettings": {
-              "Destination": `${process.env.OUTPUT_BUCKET_ARN}/`
-            }
-          },
+          "CustomName": "normal",
+          "Name": "Apple HLS",
           "Outputs": [
             {
-              "Preset": presetArnList[0],
-              "NameModifier": "_1"
+              "Preset": presetArnList['360p'],
+              "NameModifier": "_360p"
+            },
+            {
+              "Preset": presetArnList["720p"],
+              "NameModifier": "_720p"
             }
-          ]
+          ],
+          "OutputGroupSettings": {
+            "Type": "HLS_GROUP_SETTINGS",
+            "HlsGroupSettings": {
+              "SegmentLength": 10,
+              "MinSegmentLength": 0,
+              "Destination": `${outputFilePath}/normal/`,
+            }
+          }
+        },
+        {
+          "CustomName": "premium",
+          "Name": "Apple HLS",
+          "Outputs": [
+            {
+              "Preset": presetArnList["360p"],
+              "NameModifier": "_360p"
+            },
+            {
+              "Preset": presetArnList["720p"],
+              "NameModifier": "_720p"
+            },
+            {
+              "Preset": presetArnList["1080p"],
+              "NameModifier": "_1080p"
+            }
+          ],
+          "OutputGroupSettings": {
+            "Type": "HLS_GROUP_SETTINGS",
+            "HlsGroupSettings": {
+              "SegmentLength": 10,
+              "MinSegmentLength": 0,
+              "Destination": `${outputFilePath}/premium/`,
+            }
+          }
         }
       ],
-      "AdAvailOffset": 0,
       "Inputs": [
         {
           "AudioSelectors": {
@@ -63,10 +106,13 @@ export async function handler(event) {
           "FileInput": `s3://${inputBucket}/${inputFileKey}`
         }
       ],
-      "TimecodeConfig": {
-        "Source": "EMBEDDED"
-      }
-    }
+    },
+    "AccelerationSettings": {
+      "Mode": "DISABLED"
+    },
+    "StatusUpdateInterval": "SECONDS_60",
+    "Priority": 0,
+    "HopDestinations": []
   };
   
   try {

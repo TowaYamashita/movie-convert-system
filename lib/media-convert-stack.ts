@@ -7,17 +7,16 @@ interface MediaConvetProps {
   region: string;
   accountId: string;
   inputBucket: string;
-  outputBucket: string;
 }
 
-export class MediaConvetStack extends Construct{
+export class MediaConvetStack extends Construct {
   public readonly arn: string;
   public readonly queueName: string;
   public readonly queuId: string;
   public readonly createJobPolicy: PolicyStatement;
   public readonly getJobPolicy: PolicyStatement;
   public readonly iamRoleArn: string;
-  public readonly outputPresetArns: string[];
+  public readonly outputPresetArns: Record<string, string>;
 
   constructor(scope: Construct, id: string, props: MediaConvetProps){
     super(scope, id);
@@ -67,7 +66,7 @@ export class MediaConvetStack extends Construct{
     role.addToPolicy(
       new PolicyStatement({
         resources: [
-          `arn:aws:s3:::${props.outputBucket}/*`
+          `arn:aws:s3:::${props.inputBucket}/*`
         ],
         actions: [
           "s3:Put*",
@@ -77,18 +76,28 @@ export class MediaConvetStack extends Construct{
     this.iamRoleArn = role.roleArn;
 
     const outputPresetFiles = [
-      'output-preset-1',
+      {
+        'resolution': '360p',
+        'presetName': 'Custom-640x360p',
+      },
+      {
+        'resolution': '720p',
+        'presetName': 'Custom-1280x720p',
+      },
+      {
+        'resolution': '1080p',
+        'presetName': 'Custom-1920x1080p',
+      },
     ];
-    let presetArns = [];
+    let presetArns: Record<string, string> = {};
     for (let index = 0; index < outputPresetFiles.length; index++) {
       const outputPresetFile = outputPresetFiles[index];
-      const presetName = `sandbox-media-convert-${outputPresetFile}`;
-      const fileName = `assets/media_convert/${outputPresetFile}.json`;
+      const fileName = `assets/media_convert/${outputPresetFile.presetName}.json`;
       let preset = new CfnPreset(this, `MediaConvertOutputPreset${index}`, {
-        name: presetName,
+        name: outputPresetFile.presetName,
         settingsJson: JSON.parse(readFileSync(fileName, 'utf-8'))
       });
-      presetArns.push(preset.attrArn);
+      presetArns[outputPresetFile.resolution] = preset.attrArn;
     }
     this.outputPresetArns = presetArns;
   }

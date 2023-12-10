@@ -45,7 +45,6 @@ export class MovieConvertSystemStack extends Stack {
       region: this.region,
       accountId: this.account,
       inputBucket: inputBucket.bucketName,
-      outputBucket: outputBucket.bucketName,
     });
 
     // 動画変換作成ジョブを発行する Lambda関数
@@ -57,9 +56,11 @@ export class MovieConvertSystemStack extends Stack {
       environment: {
         MEDIA_CONVERT_ENDPOINT: context.customerMediaConvertEndpoint,
         QUEUE_ARN: queue.arn,
-        OUTPUT_BUCKET_ARN: outputBucket.s3UrlForObject(),
+        MOVIE_CONVERT_BUCKET_ARN: inputBucket.s3UrlForObject(),
         IAM_ROLE_ARN: queue.iamRoleArn,
-        OUTPUT_PRESET_ARNS: queue.outputPresetArns.reduce((prev, current) => `${prev},${current}`),
+        OUTPUT_PRESET_360P_ARN: queue.outputPresetArns['360p'],
+        OUTPUT_PRESET_720P_ARN: queue.outputPresetArns['720p'],
+        OUTPUT_PRESET_1080P_ARN: queue.outputPresetArns['1080p'],
       },
     });
     mediaConvertLambda.addToRolePolicy(queue.createJobPolicy);
@@ -78,7 +79,8 @@ export class MovieConvertSystemStack extends Stack {
 
     inputBucket.addEventNotification(
       EventType.OBJECT_CREATED,
-      new LambdaDestination(mediaConvertLambda)
+      new LambdaDestination(mediaConvertLambda),
+      { prefix: 'input/movie/' }
     );
 
      // 動画変換に成功した場合のフローを定義
