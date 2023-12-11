@@ -1,9 +1,24 @@
 import { MediaConvert } from '@aws-sdk/client-mediaconvert';
 
+/**
+ * 環境変数
+ */
+const ENV = {
+  MEDIA_CONVERT_ENDPOINT: process.env.MEDIA_CONVERT_ENDPOINT,
+  QUEUE_ARN: process.env.QUEUE_ARN,
+  MOVIE_CONVERT_BUCKET_ARN: process.env.MOVIE_CONVERT_BUCKET_ARN,
+  IAM_ROLE_ARN: process.env.IAM_ROLE_ARN,
+  OUTPUT_PRESET_360P_ARN: process.env.OUTPUT_PRESET_360P_ARN,
+  OUTPUT_PRESET_720P_ARN: process.env.OUTPUT_PRESET_720P_ARN,
+  OUTPUT_PRESET_1080P_ARN: process.env.OUTPUT_PRESET_1080P_ARN,
+  INPUT_PREFIX: process.env.INPUT_PREFIX,
+  OUTPUT_PREFIX: process.env.OUTPUT_PREFIX,
+}
+
 export async function handler(event) {
   const mediaconvert = new MediaConvert({
     apiVersion: '2017-08-29',
-    endpoint: process.env.MEDIA_CONVERT_ENDPOINT,
+    endpoint: ENV.MEDIA_CONVERT_ENDPOINT,
   });
 
   // S3イベントからファイル情報を取得
@@ -13,20 +28,20 @@ export async function handler(event) {
 
   // 出力ファイル先のパスを生成
   const inputFilePrefix = inputFileKey.split('/').slice(0, -1).join('/');
-  const outputFilePrefix = inputFilePrefix.replace(process.env.INPUT_PREFIX, process.env.OUTPUT_PREFIX);
-  const outputFilePath = `${process.env.MOVIE_CONVERT_BUCKET_ARN}/${outputFilePrefix}`;
+  const outputFilePrefix = inputFilePrefix.replace(ENV.INPUT_PREFIX, ENV.OUTPUT_PREFIX);
+  const outputFilePath = `${ENV.MOVIE_CONVERT_BUCKET_ARN}/${outputFilePrefix}`;
 
   // MediaConvert ジョブで使用する出力テンプレートのARNの配列
   const presetArnList = {
-    '360p': process.env.OUTPUT_PRESET_360P_ARN,
-    '720p': process.env.OUTPUT_PRESET_720P_ARN,
-    '1080p': process.env.OUTPUT_PRESET_1080P_ARN,
+    '360p': ENV.OUTPUT_PRESET_360P_ARN,
+    '720p': ENV.OUTPUT_PRESET_720P_ARN,
+    '1080p': ENV.OUTPUT_PRESET_1080P_ARN,
   };
 
   // MediaConvert ジョブの設定
   const params = {
-    "Queue": `${process.env.QUEUE_ARN}`,
-    "Role": `${process.env.IAM_ROLE_ARN}`,
+    "Queue": `${ENV.QUEUE_ARN}`,
+    "Role": `${ENV.IAM_ROLE_ARN}`,
     "Settings": {
       "TimecodeConfig": {
         "Source": "ZEROBASED"
