@@ -5,7 +5,7 @@ export async function handler(event) {
     apiVersion: '2017-08-29',
     endpoint: process.env.MEDIA_CONVERT_ENDPOINT,
   });
-  
+
   // S3イベントからファイル情報を取得
   const s3Info = event.Records[0].s3;
   const inputBucket = s3Info.bucket.name;
@@ -17,7 +17,7 @@ export async function handler(event) {
   const outputFilePath = `${process.env.MOVIE_CONVERT_BUCKET_ARN}/${outputFilePrefix}`;
 
   // MediaConvert ジョブで使用する出力テンプレートのARNの配列
-  const presetArnList ={
+  const presetArnList = {
     '360p': process.env.OUTPUT_PRESET_360P_ARN,
     '720p': process.env.OUTPUT_PRESET_720P_ARN,
     '1080p': process.env.OUTPUT_PRESET_1080P_ARN,
@@ -114,14 +114,14 @@ export async function handler(event) {
     "Priority": 0,
     "HopDestinations": []
   };
-  
+
   try {
-      // MediaConvert ジョブの作成
-      const data = await mediaconvert.createJob(params);
-      console.log('MediaConvert job created:', data);
-      return data;
+    // MediaConvert ジョブの作成
+    const data = await mediaconvert.createJob(params);
+    console.log('MediaConvert job created:', data);
+    return data;
   } catch (err) {
-      console.error('Error creating MediaConvert job:', err);
-      throw new Error('Error creating MediaConvert job');
+    console.error('Error creating MediaConvert job:', err);
+    throw new Error('Error creating MediaConvert job');
   }
 }

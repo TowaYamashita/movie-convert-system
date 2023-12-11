@@ -20,12 +20,12 @@ export class MediaConvetStack extends Construct {
   public readonly iamRoleArn: string;
   public readonly outputPresetArns: Record<string, string>;
 
-  constructor(scope: Construct, id: string, props: MediaConvetProps){
+  constructor(scope: Construct, id: string, props: MediaConvetProps) {
     super(scope, id);
 
     const queue = new CfnQueue(this, 'MediaConvertQueue', {
       name: 'sandbox-movie-convert',
-      pricingPlan: 'ON_DEMAND', 
+      pricingPlan: 'ON_DEMAND',
       status: 'ACTIVE',
     });
 

@@ -1,4 +1,4 @@
-import { MediaConvertClient, GetJobCommand } from "@aws-sdk/client-mediaconvert"; 
+import { MediaConvertClient, GetJobCommand } from "@aws-sdk/client-mediaconvert";
 import { S3Client, GetObjectTaggingCommand, PutObjectTaggingCommand } from '@aws-sdk/client-s3';
 
 export async function handler(event) {
@@ -33,10 +33,10 @@ async function updateInputS3ObjectTag(event) {
   );
   const currentTags = currentTagsData.TagSet;
   const existingTag = currentTags.find(tag => tag.key == 'delay');
-  if(existingTag) {
+  if (existingTag) {
     existingTag.Value = 'true';
   } else {
-    currentTags.push({Key: 'delay', Value: 'true'});
+    currentTags.push({ Key: 'delay', Value: 'true' });
   }
   await s3Client.send(
     new PutObjectTaggingCommand({
@@ -60,7 +60,7 @@ async function fetchInputS3BucketAndObejctKey(event) {
       Id: event.detail.jobId,
     })
   );
-  
+
   // 入力元の動画がアップロードされたS3オブジェクトのS3URL
   // 例: s3://input.example.com/upload/movie/sample.mov
   // TODO: 単一の入力ファイルから複数個の出力ファイルが生成される想定であるため、複数個の入力ファイルがあることは考慮しない

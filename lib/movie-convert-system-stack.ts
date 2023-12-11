@@ -13,7 +13,7 @@ interface StageContext {
   outputBucketName: string;
   customerMediaConvertEndpoint: string;
   inputPrefix: string;
-  outputPrefix: string;  
+  outputPrefix: string;
 }
 
 export class MovieConvertSystemStack extends Stack {
@@ -21,7 +21,7 @@ export class MovieConvertSystemStack extends Stack {
     super(scope, id, props);
 
     const stage = this.node.tryGetContext('stage');
-    const context : StageContext = this.node.tryGetContext(stage);
+    const context: StageContext = this.node.tryGetContext(stage);
 
     // 変換元動画データアップロード先
     const inputBucket = new Bucket(this, 'InputBucket', {
@@ -84,8 +84,8 @@ export class MovieConvertSystemStack extends Stack {
       { prefix: `${context.inputPrefix}/` }
     );
 
-     // 動画変換に成功した場合のフローを定義
-     const eventSuccessRule = new Rule(this, 'MediaConvertSuccessRule', {
+    // 動画変換に成功した場合のフローを定義
+    const eventSuccessRule = new Rule(this, 'MediaConvertSuccessRule', {
       eventPattern: {
         source: ['aws.mediaconvert'],
         detailType: ['MediaConvert Job State Change'],
@@ -108,7 +108,7 @@ export class MovieConvertSystemStack extends Stack {
     inputBucket.grantReadWrite(notifySuccessLambda);
     eventSuccessRule.addTarget(new LambdaFunction(notifySuccessLambda));
 
-     // 動画変換に失敗した場合のフローを定義
+    // 動画変換に失敗した場合のフローを定義
     const eventErrorRule = new Rule(this, 'MediaConvertErrorRule', {
       eventPattern: {
         source: ['aws.mediaconvert'],
