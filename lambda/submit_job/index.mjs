@@ -1,4 +1,4 @@
-import { MediaConvert } from '@aws-sdk/client-mediaconvert';
+import { MediaConvertClient, CreateJobCommand } from '@aws-sdk/client-mediaconvert';
 
 /**
  * 環境変数
@@ -16,11 +16,22 @@ const ENV = {
 }
 
 export async function handler(event) {
-  const mediaconvert = new MediaConvert({
-    apiVersion: '2017-08-29',
-    endpoint: ENV.MEDIA_CONVERT_ENDPOINT,
-  });
+  const params = buildJobSetting(event);
 
+  try {
+    const data = await submitJob(params);
+    console.log('MediaConvert job created:', data);
+    return data;
+  } catch (err) {
+    console.error('Error creating MediaConvert job:', err);
+    throw new Error('Error creating MediaConvert job');
+  }
+}
+
+/**
+ *  MediaConvert ジョブ設定を作成 
+ */
+const buildJobSetting = (event) => {
   // S3イベントからファイル情報を取得
   const s3Info = event.Records[0].s3;
   const inputBucket = s3Info.bucket.name;
@@ -38,8 +49,7 @@ export async function handler(event) {
     '1080p': ENV.OUTPUT_PRESET_1080P_ARN,
   };
 
-  // MediaConvert ジョブの設定
-  const params = {
+  return {
     "Queue": `${ENV.QUEUE_ARN}`,
     "Role": `${ENV.IAM_ROLE_ARN}`,
     "Settings": {
@@ -129,14 +139,19 @@ export async function handler(event) {
     "Priority": 0,
     "HopDestinations": []
   };
+}
 
-  try {
-    // MediaConvert ジョブの作成
-    const data = await mediaconvert.createJob(params);
-    console.log('MediaConvert job created:', data);
-    return data;
-  } catch (err) {
-    console.error('Error creating MediaConvert job:', err);
-    throw new Error('Error creating MediaConvert job');
-  }
+/**
+ * MediaConvert キューにジョブを発行
+ */
+const submitJob = async (params) => {
+  const mediaConvertClient = new MediaConvertClient({
+    apiVersion: '2017-08-29',
+    endpoint: ENV.MEDIA_CONVERT_ENDPOINT,
+  });
+
+  const command = new CreateJobCommand(params);
+
+  const data = await mediaConvertClient.send(command);
+  return data;
 }
