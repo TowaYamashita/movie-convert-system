@@ -1,6 +1,18 @@
 import { MediaConvertClient, GetJobCommand } from "@aws-sdk/client-mediaconvert";
 import { S3Client, GetObjectTaggingCommand, PutObjectTaggingCommand } from '@aws-sdk/client-s3';
 
+/**
+ * 環境変数
+ */
+const ENV = {
+  /**
+   * MediaConvet のアカウント別エンドポイント
+   * @type string
+   * @example https://xxxxxxxxx.mediaconvert.us-east-1.amazonaws.com
+   */
+  MEDIA_CONVERT_ENDPOINT: process.env.MEDIA_CONVERT_ENDPOINT,
+};
+
 export async function handler(event) {
   await updateInputS3ObjectTag(event);
 
@@ -41,7 +53,7 @@ async function fetchInputS3BucketAndObejctKey(event) {
   // jobId から Job を取得する
   const mediaConvertClient = new MediaConvertClient({
     apiVersion: '2017-08-29',
-    endpoint: process.env.MEDIA_CONVERT_ENDPOINT,
+    endpoint: ENV.MEDIA_CONVERT_ENDPOINT,
   });
   const response = await mediaConvertClient.send(
     new GetJobCommand({
