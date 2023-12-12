@@ -1,5 +1,5 @@
-import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
-import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
+import { Stack, StackProps } from 'aws-cdk-lib';
+import { EventType } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { MediaConvetStack } from './media-convert-stack';
 import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
@@ -7,6 +7,7 @@ import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
+import { InputBucketStack } from './input-bucket-stack';
 
 interface StageContext {
   inputBucketName: string;
@@ -24,24 +25,15 @@ export class MovieConvertSystemStack extends Stack {
     const context: StageContext = this.node.tryGetContext(stage);
 
     // 変換元動画データアップロード先
-    const inputBucket = new Bucket(this, 'InputBucket', {
+    const inputBucket = new InputBucketStack (this, 'InputBucket', {
       bucketName: context.inputBucketName,
-      removalPolicy: RemovalPolicy.DESTROY,
-    });
-    inputBucket.addLifecycleRule({
-      id: 'DeleteObjectsWithTagDelay',
-      tagFilters: {
-        delay: 'true'
-      },
-      expiration: Duration.days(1),
-      noncurrentVersionExpiration: Duration.days(1),
     });
 
     // AWS Elemetal MediaConvert
     const queue = new MediaConvetStack(this, 'MediaConvert', {
       region: this.region,
       accountId: this.account,
-      inputBucket: inputBucket.bucketName,
+      inputBucket: inputBucket.bucket.bucketName,
       inputPrefix: context.inputPrefix,
       outputPrefix: context.outputPrefix,
     });
@@ -55,7 +47,7 @@ export class MovieConvertSystemStack extends Stack {
       environment: {
         MEDIA_CONVERT_ENDPOINT: context.customerMediaConvertEndpoint,
         QUEUE_ARN: queue.arn,
-        MOVIE_CONVERT_BUCKET_ARN: inputBucket.s3UrlForObject(),
+        MOVIE_CONVERT_BUCKET_ARN: inputBucket.bucket.s3UrlForObject(),
         IAM_ROLE_ARN: queue.iamRoleArn,
         OUTPUT_PRESET_360P_ARN: queue.outputPresetArns['360p'],
         OUTPUT_PRESET_720P_ARN: queue.outputPresetArns['720p'],
@@ -78,7 +70,7 @@ export class MovieConvertSystemStack extends Stack {
       resources: [queue.iamRoleArn],
     }));
 
-    inputBucket.addEventNotification(
+    inputBucket.bucket.addEventNotification(
       EventType.OBJECT_CREATED,
       new LambdaDestination(mediaConvertLambda),
       { prefix: `${context.inputPrefix}/` }
@@ -105,7 +97,7 @@ export class MovieConvertSystemStack extends Stack {
       },
     });
     notifySuccessLambda.addToRolePolicy(queue.getJobPolicy);
-    inputBucket.grantReadWrite(notifySuccessLambda);
+    inputBucket.bucket.grantReadWrite(notifySuccessLambda);
     eventSuccessRule.addTarget(new LambdaFunction(notifySuccessLambda));
 
     // 動画変換に失敗した場合のフローを定義
@@ -129,7 +121,7 @@ export class MovieConvertSystemStack extends Stack {
       },
     });
     notifyErrorLambda.addToRolePolicy(queue.getJobPolicy);
-    inputBucket.grantReadWrite(notifyErrorLambda);
+    inputBucket.bucket.grantReadWrite(notifyErrorLambda);
     eventErrorRule.addTarget(new LambdaFunction(notifyErrorLambda));
   }
 }
