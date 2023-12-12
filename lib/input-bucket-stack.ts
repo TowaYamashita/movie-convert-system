@@ -31,5 +31,7 @@ export class InputBucketStack extends Construct{
       expiration: Duration.days(1),
       noncurrentVersionExpiration: Duration.days(1),
     });
+
+    this.bucket = inputBucket;
   }
 }
