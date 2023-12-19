@@ -13,6 +13,7 @@ interface StageContext {
   customerMediaConvertEndpoint: string;
   inputPrefix: string;
   outputPrefix: string;
+  slackWebhookUrl: string;
 }
 
 export class MovieConvertSystemStack extends Stack {
@@ -46,6 +47,7 @@ export class MovieConvertSystemStack extends Stack {
       inputPrefix: context.inputPrefix,
       outputPrefix: context.outputPrefix,
       createJobPolicy: queue.createJobPolicy,
+      slackWebhookUrl: context.slackWebhookUrl,
     });
 
     // 動画変換に成功した場合のフローを定義

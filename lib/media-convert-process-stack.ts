@@ -1,6 +1,6 @@
 import { Construct } from "constructs";
 import { Bucket, EventType } from 'aws-cdk-lib/aws-s3';
-import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
+import { Function, Runtime, Code, LayerVersion } from 'aws-cdk-lib/aws-lambda';
 import { LambdaDestination } from 'aws-cdk-lib/aws-s3-notifications';
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam';
 
@@ -38,17 +38,28 @@ interface MediaConvertProcessProps {
    * MediaConvert のジョブを作成する処理を実行する Lambda に割当てる IAM Role
    */
   createJobPolicy: PolicyStatement;
+  /**
+   * ジョブ作成後に通知を出すSlackチャンネルのWebhook URL
+   */
+  slackWebhookUrl: string;
 }
 
 export class MediaConvertProcessStack extends Construct {
   constructor(scope: Construct, id: string, props: MediaConvertProcessProps) {
     super(scope, id);
 
+    const layer = new LayerVersion(this, 'MediaConvertLambdaLayer', {
+      layerVersionName: 'nodejs20-axios',
+      compatibleRuntimes: [Runtime.NODEJS_20_X],
+      code: Code.fromAsset('lambda/submit_job'),
+    });
+
     const mediaConvertLambda = new Function(this, 'MediaConvertLambda', {
       functionName: 'submit-job',
       runtime: Runtime.NODEJS_20_X,
       handler: 'index.handler',
       code: Code.fromAsset('lambda/submit_job'),
+      layers: [layer],
       environment: {
         MEDIA_CONVERT_ENDPOINT: props.customerMediaConvertEndpoint,
         QUEUE_ARN: props.queueArn,
@@ -59,6 +70,7 @@ export class MediaConvertProcessStack extends Construct {
         OUTPUT_PRESET_1080P_ARN: props.outputPresetArns['1080p'],
         INPUT_PREFIX: props.inputPrefix,
         OUTPUT_PREFIX: props.outputPrefix,
+        SLACK_WEBHOOK_URL: props.slackWebhookUrl,
       },
     });
     mediaConvertLambda.addToRolePolicy(props.createJobPolicy);
