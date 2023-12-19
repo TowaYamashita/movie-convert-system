@@ -65,14 +65,16 @@
       "outputBucketName": "output.example.com",
       "customerMediaConvertEndpoint": "https://vasjpylpa.mediaconvert.us-east-1.amazonaws.com",
       "inputPrefix": "input/movie",
-      "outputPrefix": "output/movie"
+      "outputPrefix": "output/movie",
+      "slackWebhookUrl": "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
     },
     "prd": {
       "inputBucketName": "",
       "outputBucketName": "",
       "customerMediaConvertEndpoint": "",
       "inputPrefix": "",
-      "outputPrefix": ""
+      "outputPrefix": "",
+      "slackWebhookUrl": ""
     }
   }
 }

@@ -1,4 +1,5 @@
 import { MediaConvertClient, CreateJobCommand } from '@aws-sdk/client-mediaconvert';
+import axios from 'axios';
 
 /**
  * 環境変数
@@ -13,6 +14,7 @@ const ENV = {
   OUTPUT_PRESET_1080P_ARN: process.env.OUTPUT_PRESET_1080P_ARN,
   INPUT_PREFIX: process.env.INPUT_PREFIX,
   OUTPUT_PREFIX: process.env.OUTPUT_PREFIX,
+  SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,
 }
 
 export async function handler(event) {
@@ -21,7 +23,7 @@ export async function handler(event) {
   try {
     const data = await submitJob(params);
     console.log('MediaConvert job created:', data);
-    return data;
+    await notifyToSlack(JSON.stringify(data));
   } catch (err) {
     console.error('Error creating MediaConvert job:', err);
     throw new Error('Error creating MediaConvert job');
@@ -154,4 +156,20 @@ const submitJob = async (params) => {
 
   const data = await mediaConvertClient.send(command);
   return data;
+}
+
+/**
+ * Slackに通知
+ * @param {string} message 
+ */
+const notifyToSlack = async (message) => {
+  const data = {
+    "text": message,
+  }
+  await axios.post(ENV.SLACK_WEBHOOK_URL, data, {
+    timeout: 3000,
+    headers: {
+      "Content-Type": 'application/json',
+    },
+  });
 }
