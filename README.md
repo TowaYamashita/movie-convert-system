@@ -26,7 +26,7 @@ aws-cli/2.13.32 Python/3.11.6 Darwin/23.1.0 exe/x86_64 prompt/off
 npm install
 
 # Lambda Layer で使用する node_modules
-npm --prefix ./lambda/submit_job install ./lambda/submit_job 
+npm --prefix ./lambda_layer/axios/nodejs install ./lambda_layer/axios/nodejs 
 
 # 開発環境
 npm run cdk bootstrap -- -c stage=dev

@@ -51,7 +51,7 @@ export class MediaConvertProcessStack extends Construct {
     const layer = new LayerVersion(this, 'MediaConvertLambdaLayer', {
       layerVersionName: 'nodejs20-axios',
       compatibleRuntimes: [Runtime.NODEJS_20_X],
-      code: Code.fromAsset('lambda/submit_job'),
+      code: Code.fromAsset('lambda_layer/axios'),
     });
 
     const mediaConvertLambda = new Function(this, 'MediaConvertLambda', {
