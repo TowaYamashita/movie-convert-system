@@ -18,25 +18,16 @@ const ENV = {
 }
 
 export async function handler(event) {
-  const data = {'name': 'alice'};
-  const response = await axios.post('https://example.com', data, {
-    timeout: 3000,
-    headers: {
-      "Content-Type": 'application/json',
-    },
-  });
-  console.log(JSON.stringify(response.data));
-  
-  // const params = buildJobSetting(event);
+  const params = buildJobSetting(event);
 
-  // try {
-  //   const data = await submitJob(params);
-  //   console.log('MediaConvert job created:', data);
-  //   await notifyToSlack(JSON.stringify(data));
-  // } catch (err) {
-  //   console.error('Error creating MediaConvert job:', err);
-  //   throw new Error('Error creating MediaConvert job');
-  // }
+  try {
+    const data = await submitJob(params);
+    console.log('MediaConvert job created:', data);
+    await notifyToSlack(JSON.stringify(data));
+  } catch (err) {
+    console.error('Error creating MediaConvert job:', err);
+    throw new Error('Error creating MediaConvert job');
+  }
 }
 
 /**
