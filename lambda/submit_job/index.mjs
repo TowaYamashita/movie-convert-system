@@ -56,9 +56,9 @@ const buildJobSetting = (event) => {
 
   // MediaConvert ジョブで使用する出力テンプレート(サムネイル)のARNの配列
   const thumbnailPresetArnList = {
-    '360p': ENV.OUTPUT_PRESET_360P_ARN,
-    '720p': ENV.OUTPUT_PRESET_720P_ARN,
-    '1080p': ENV.OUTPUT_PRESET_1080P_ARN,
+    '360p': ENV.OUTPUT_PRESET_360P_THUMBNAIL_ARN,
+    '720p': ENV.OUTPUT_PRESET_720P_THUMBNAIL_ARN,
+    '1080p': ENV.OUTPUT_PRESET_1080P_THUMBNAIL_ARN,
   };
 
   return {
