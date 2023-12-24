@@ -52,14 +52,10 @@ https://docs.aws.amazon.com/mediaconvert/latest/ug/video-scaling.html
 |FIT_NO_UPSCALE|46 x 100|![](images/B_4_ScalingBehavior_FIT_NO_UPSCALE.jpeg)|
 |FILL|100 x 100|![](images/B_5_ScalingBehavior_FILL.jpeg)|
 
-### FIT と FIT_NO_UPSCALE の比較
+### FIT と FIT_NO_UPSCALE の違う点
 
-- 同じ点
-  - ビデオのアスペクト比を維持しながら、異なる解像度を出力する
-- 違うこと
-  - 出力ビデオの解像度 > 入力ビデオの解像度
-    - FIT: 入力ビデオが出力解像度に合わせて拡大
-    - FIT_NO_UPSCALE: 拡大も縮小もしない
-  - 出力ビデオの解像度 < 入力ビデオの解像度
-    - FIT: 拡大も縮小もしない
-    - FIT_NO_UPSCALE: 入力ビデオが出力解像度に合わせて縮小
+入力幅および高さが出力幅および高さよりも小さい場合の挙動が異なる
+
+- 例: 入力(200 x 200) -> 出力(400 x 300) の場合
+  - FIT: 300 x 300 (= 入力のアスペクト比を保ったまま入力を拡大する)
+  - FIT_NO_UPSCALE: 200 x 200 (= 入力を拡大および縮小せずに出力する)
