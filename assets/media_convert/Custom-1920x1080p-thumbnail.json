@@ -1,12 +1,14 @@
 {
   "VideoDescription": {
-    "Width": 300,
-    "ScalingBehavior": "DEFAULT",
+    "Width": 250,
+    "Height": 250,
+    "ScalingBehavior": "FIT_NO_UPSCALE",
     "Sharpness": 50,
     "CodecSettings": {
       "Codec": "FRAME_CAPTURE",
       "FrameCaptureSettings": {
-        "Quality": 80
+        "Quality": 80,
+        "MaxCaptures": 1
       }
     }
   },
