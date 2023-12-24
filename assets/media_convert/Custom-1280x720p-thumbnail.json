@@ -1,0 +1,16 @@
+{
+  "VideoDescription": {
+    "Width": 300,
+    "ScalingBehavior": "DEFAULT",
+    "Sharpness": 50,
+    "CodecSettings": {
+      "Codec": "FRAME_CAPTURE",
+      "FrameCaptureSettings": {
+        "Quality": 80
+      }
+    }
+  },
+  "ContainerSettings": {
+    "Container": "RAW"
+  }
+}

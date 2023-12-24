@@ -25,7 +25,7 @@ interface MediaConvertProcessProps {
   /**
    * MediaConvert のジョブを作成する際に使う解像度別出力プリセット
    */
-  outputPresetArns: Record<'360p' | '720p' | '1080p', string>;
+  outputPresetArns: Record<'360p_movie' | '360p_thumbnail' | '720p_movie' | '720p_thumbnail' | '1080p_movie' | '1080p_thumbnail', string>;
   /**
    * 変換元動画のプレフィックス
    */
@@ -65,9 +65,12 @@ export class MediaConvertProcessStack extends Construct {
         QUEUE_ARN: props.queueArn,
         MOVIE_CONVERT_BUCKET_ARN: props.inputBucket.s3UrlForObject(),
         IAM_ROLE_ARN: props.queueIamRoleArn,
-        OUTPUT_PRESET_360P_ARN: props.outputPresetArns['360p'],
-        OUTPUT_PRESET_720P_ARN: props.outputPresetArns['720p'],
-        OUTPUT_PRESET_1080P_ARN: props.outputPresetArns['1080p'],
+        OUTPUT_PRESET_360P_ARN: props.outputPresetArns['360p_movie'],
+        OUTPUT_PRESET_720P_ARN: props.outputPresetArns['720p_movie'],
+        OUTPUT_PRESET_1080P_ARN: props.outputPresetArns['1080p_movie'],
+        OUTPUT_PRESET_360P_THUMBNAIL_ARN: props.outputPresetArns['360p_thumbnail'],
+        OUTPUT_PRESET_720P_THUMBNAIL_ARN: props.outputPresetArns['720p_thumbnail'],
+        OUTPUT_PRESET_1080P_THUMBNAIL_ARN: props.outputPresetArns['1080p_thumbnail'],
         INPUT_PREFIX: props.inputPrefix,
         OUTPUT_PREFIX: props.outputPrefix,
         SLACK_WEBHOOK_URL: props.slackWebhookUrl,

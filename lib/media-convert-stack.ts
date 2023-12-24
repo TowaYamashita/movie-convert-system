@@ -94,12 +94,19 @@ export class MediaConvetStack extends Construct {
     let presetArns: Record<string, string> = {};
     for (let index = 0; index < outputPresetFiles.length; index++) {
       const outputPresetFile = outputPresetFiles[index];
-      const fileName = `assets/media_convert/${outputPresetFile.presetName}.json`;
-      let preset = new CfnPreset(this, `MediaConvertOutputPreset${index}`, {
-        name: outputPresetFile.presetName,
-        settingsJson: JSON.parse(readFileSync(fileName, 'utf-8'))
+      const movieFileName = `assets/media_convert/${outputPresetFile.presetName}-movie.json`;
+      let moviePreset = new CfnPreset(this, `MediaConvertOutputMoviePreset${index}`, {
+        name: `${outputPresetFile.presetName}-movie`,
+        settingsJson: JSON.parse(readFileSync(movieFileName, 'utf-8'))
       });
-      presetArns[outputPresetFile.resolution] = preset.attrArn;
+      presetArns[`${outputPresetFile.resolution}_movie`] = moviePreset.attrArn;
+
+      const thumbnailFileName = `assets/media_convert/${outputPresetFile.presetName}-thumbnail.json`;
+      let thumbnailPreset = new CfnPreset(this, `MediaConvertOutputThumbnailPreset${index}`, {
+        name: `${outputPresetFile.presetName}-thumbnail`,
+        settingsJson: JSON.parse(readFileSync(thumbnailFileName, 'utf-8'))
+      });
+      presetArns[`${outputPresetFile.resolution}_thumbnail`] = thumbnailPreset.attrArn;
     }
     this.outputPresetArns = presetArns;
   }
