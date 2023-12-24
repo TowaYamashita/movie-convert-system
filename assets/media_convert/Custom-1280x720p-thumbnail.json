@@ -2,7 +2,7 @@
   "VideoDescription": {
     "Width": 250,
     "Height": 250,
-    "ScalingBehavior": "FIT_NO_UPSCALE",
+    "ScalingBehavior": "FIT",
     "Sharpness": 50,
     "CodecSettings": {
       "Codec": "FRAME_CAPTURE",
