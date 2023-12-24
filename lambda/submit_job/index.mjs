@@ -12,6 +12,9 @@ const ENV = {
   OUTPUT_PRESET_360P_ARN: process.env.OUTPUT_PRESET_360P_ARN,
   OUTPUT_PRESET_720P_ARN: process.env.OUTPUT_PRESET_720P_ARN,
   OUTPUT_PRESET_1080P_ARN: process.env.OUTPUT_PRESET_1080P_ARN,
+  OUTPUT_PRESET_360P_THUMBNAIL_ARN: process.env.OUTPUT_PRESET_360P_THUMBNAIL_ARN,
+  OUTPUT_PRESET_720P_THUMBNAIL_ARN: process.env.OUTPUT_PRESET_720P_THUMBNAIL_ARN,
+  OUTPUT_PRESET_1080P_THUMBNAIL_ARN: process.env.OUTPUT_PRESET_1080P_THUMBNAIL_ARN,
   INPUT_PREFIX: process.env.INPUT_PREFIX,
   OUTPUT_PREFIX: process.env.OUTPUT_PREFIX,
   SLACK_WEBHOOK_URL: process.env.SLACK_WEBHOOK_URL,
@@ -46,6 +49,13 @@ const buildJobSetting = (event) => {
 
   // MediaConvert ジョブで使用する出力テンプレートのARNの配列
   const presetArnList = {
+    '360p': ENV.OUTPUT_PRESET_360P_ARN,
+    '720p': ENV.OUTPUT_PRESET_720P_ARN,
+    '1080p': ENV.OUTPUT_PRESET_1080P_ARN,
+  };
+
+  // MediaConvert ジョブで使用する出力テンプレート(サムネイル)のARNの配列
+  const thumbnailPresetArnList = {
     '360p': ENV.OUTPUT_PRESET_360P_ARN,
     '720p': ENV.OUTPUT_PRESET_720P_ARN,
     '1080p': ENV.OUTPUT_PRESET_1080P_ARN,
@@ -104,6 +114,30 @@ const buildJobSetting = (event) => {
               "SegmentLength": 10,
               "MinSegmentLength": 0,
               "Destination": `${outputFilePath}/premium/`,
+            }
+          }
+        },
+        {
+          "CustomName": "thumbnail",
+          "Name": "thumbnail",
+          "Outputs": [
+            {
+              "Preset": thumbnailPresetArnList["360p"],
+              "NameModifier": "_360p"
+            },
+            {
+              "Preset": thumbnailPresetArnList["720p"],
+              "NameModifier": "_720p"
+            },
+            {
+              "Preset": thumbnailPresetArnList["1080p"],
+              "NameModifier": "_1080p"
+            }
+          ],
+          "OutputGroupSettings": {
+            "Type": "FILE_GROUP_SETTINGS",
+            "FileGroupSettings": {
+              "Destination": `${outputFilePath}/thumbnail/`,
             }
           }
         }
