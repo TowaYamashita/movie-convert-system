@@ -1,11 +1,9 @@
-import { Stack, StackProps } from 'aws-cdk-lib';
+import { Stack, StackProps, Tags } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { MediaConvetStack } from './media-convert-stack';
-import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
-import { Rule } from 'aws-cdk-lib/aws-events';
-import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets';
 import { InputBucketStack } from './input-bucket-stack';
 import { MediaConvertProcessStack } from './media-convert-process-stack';
+import { MediaConvertNotifyStack } from './media-convert-notify-stack';
 
 interface StageContext {
   inputBucketName: string;
@@ -27,6 +25,8 @@ export class MovieConvertSystemStack extends Stack {
     const inputBucket = new InputBucketStack (this, 'InputBucket', {
       bucketName: context.inputBucketName,
     });
+    Tags.of(inputBucket).add('Service', `movie-convert-system-${stage}`);
+    Tags.of(inputBucket).add('Ref', 'https://github.com/TowaYamashita/movie-convert-system');
 
     // AWS Elemetal MediaConvert
     const queue = new MediaConvetStack(this, 'MediaConvert', {
@@ -36,9 +36,11 @@ export class MovieConvertSystemStack extends Stack {
       inputPrefix: context.inputPrefix,
       outputPrefix: context.outputPrefix,
     });
+    Tags.of(queue).add('Service', `movie-convert-system-${stage}`);
+    Tags.of(queue).add('Ref', 'https://github.com/TowaYamashita/movie-convert-system');
 
     // 動画変換作成ジョブの発行&実行
-    new MediaConvertProcessStack(this, 'MediaConvertProcess', {
+    const process = new MediaConvertProcessStack(this, 'MediaConvertProcess', {
       customerMediaConvertEndpoint: context.customerMediaConvertEndpoint,
       queueArn: queue.arn,
       inputBucket: inputBucket.bucket,
@@ -49,53 +51,29 @@ export class MovieConvertSystemStack extends Stack {
       createJobPolicy: queue.createJobPolicy,
       slackWebhookUrl: context.slackWebhookUrl,
     });
+    Tags.of(process).add('Service', `movie-convert-system-${stage}`);
+    Tags.of(process).add('Ref', 'https://github.com/TowaYamashita/movie-convert-system');
 
     // 動画変換に成功した場合のフローを定義
-    const eventSuccessRule = new Rule(this, 'MediaConvertSuccessRule', {
-      eventPattern: {
-        source: ['aws.mediaconvert'],
-        detailType: ['MediaConvert Job State Change'],
-        detail: {
-          status: ['COMPLETE'],
-          queue: [queue.arn],
-        },
-      },
+    const success = new MediaConvertNotifyStack(this, 'MediaConvertSuccessNotifiy', {
+      status: ['COMPLETE'],
+      queueArn: queue.arn,
+      customerMediaConvertEndpoint: context.customerMediaConvertEndpoint,
+      getJobPolicy: queue.getJobPolicy,
+      inputBucket: inputBucket.bucket,
     });
-    const notifySuccessLambda = new Function(this, 'NotifySuccessLambda', {
-      functionName: 'notify-success-job',
-      runtime: Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: Code.fromAsset('lambda/notify_success_job'),
-      environment: {
-        MEDIA_CONVERT_ENDPOINT: context.customerMediaConvertEndpoint,
-      },
-    });
-    notifySuccessLambda.addToRolePolicy(queue.getJobPolicy);
-    inputBucket.bucket.grantReadWrite(notifySuccessLambda);
-    eventSuccessRule.addTarget(new LambdaFunction(notifySuccessLambda));
+    Tags.of(success).add('Service', `movie-convert-system-${stage}`);
+    Tags.of(success).add('Ref', 'https://github.com/TowaYamashita/movie-convert-system');
 
     // 動画変換に失敗した場合のフローを定義
-    const eventErrorRule = new Rule(this, 'MediaConvertErrorRule', {
-      eventPattern: {
-        source: ['aws.mediaconvert'],
-        detailType: ['MediaConvert Job State Change'],
-        detail: {
-          status: ['NEW_WARNING', 'ERROR'],
-          queue: [queue.arn],
-        },
-      },
+    const error = new MediaConvertNotifyStack(this, 'MediaConvertErrorNotifiy', {
+      status: ['NEW_WARNING', 'ERROR'],
+      queueArn: queue.arn,
+      customerMediaConvertEndpoint: context.customerMediaConvertEndpoint,
+      getJobPolicy: queue.getJobPolicy,
+      inputBucket: inputBucket.bucket,
     });
-    const notifyErrorLambda = new Function(this, 'NotifyErrorLambda', {
-      functionName: 'notify-error-job',
-      runtime: Runtime.NODEJS_20_X,
-      handler: 'index.handler',
-      code: Code.fromAsset('lambda/notify_error_job'),
-      environment: {
-        MEDIA_CONVERT_ENDPOINT: context.customerMediaConvertEndpoint,
-      },
-    });
-    notifyErrorLambda.addToRolePolicy(queue.getJobPolicy);
-    inputBucket.bucket.grantReadWrite(notifyErrorLambda);
-    eventErrorRule.addTarget(new LambdaFunction(notifyErrorLambda));
+    Tags.of(error).add('Service', `movie-convert-system-${stage}`);
+    Tags.of(error).add('Ref', 'https://github.com/TowaYamashita/movie-convert-system');
   }
 }
